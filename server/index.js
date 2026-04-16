@@ -74,14 +74,13 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('approve_expense', ({ id, result }) => {
-    const expenseIdx = familyData.expenses.findIndex(e => e.id === id);
-    if (result === 'Approved') {
-        const approvedExp = { id, status: 'Approved', amount: 15000, name: 'Expense', category: 'General', sender: 'User', timestamp: new Date().toISOString() };
-        familyData.expenses.push(approvedExp);
-        io.emit('expense_added', approvedExp); // Notify to adjust dynamic balances
+  socket.on('update_expense_status', ({ id, status }) => {
+    const expense = familyData.expenses.find(e => e.id === id);
+    if (expense) {
+      expense.status = status;
     }
-    io.emit('approval_result', { id, result });
+    // Broadcast the result to update all connected clients' UIs
+    io.emit('approval_result', { id, result: status });
   });
 
   // Pay Bill Realtime Update

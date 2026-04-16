@@ -3,7 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 require('dotenv').config();
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenAI } = require('@google/genai');
 
 const app = express();
 const server = http.createServer(app);
@@ -105,24 +105,18 @@ io.on('connection', (socket) => {
         throw new Error('GEMINI_API_KEY NOT SET');
       }
 
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+      const genAI = new GoogleGenAI({ apiKey });
+      const prompt = `You are Spendzy, an intelligent and concise family finance assistant. Analyze the household's live financial data and answer the user's query playfully but accurately. Keep responses brief and friendly.
 
-      const prompt = `
-        You are Spendzy, an intelligent, helpful, and concise family finance assistant chatbot.
-        You have direct access to the household's live financial data.
-        Analyze this exact real-time state database to answer the user's query playfully but accurately.
-        If they ask for something not present, tell them you don't know based on current data.
-        Keep your response brief, friendly, and formatted nicely.
-        
-        Live Family JSON Database:
-        ${JSON.stringify(familyData)}
+Live Family Data: ${JSON.stringify(familyData)}
 
-        User's Query: "${text}"
-      `;
+User's Query: "${text}"`;
 
-      const result = await model.generateContent(prompt);
-      const reply = result.response.text();
+      const response = await genAI.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: prompt,
+      });
+      const reply = response.text;
       socket.emit('ai_response', { sender: 'bot', text: reply });
       
     } catch (error) {

@@ -119,8 +119,6 @@ function App() {
         return <Subscriptions familyData={familyData} />;
       case 'bills':
         return <BillReminders familyData={familyData} />;
-      case 'ai':
-        return <AIChatbot familyData={familyData} />;
       default:
         return <Dashboard familyData={familyData} />;
     }

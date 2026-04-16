@@ -19,7 +19,6 @@ const Sidebar = ({ activeTab, setActiveTab, unreadCount, userData }) => {
     { id: 'calendar', label: 'Calendar View', icon: <Calendar size={20} /> },
     { id: 'subscriptions', label: 'Subscriptions', icon: <Video size={20} /> },
     { id: 'bills', label: 'Bill Reminders', icon: <Bell size={20} /> },
-    { id: 'ai', label: 'AI Chatbot', icon: <Bot size={20} />, color: 'var(--secondary)' },
   ];
 
   return (

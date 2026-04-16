@@ -1,0 +1,24 @@
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
+
+export default defineConfig({
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
+      pwaAssets: {
+        disabled: false,
+        config: true,
+      },
+      manifest: {
+        name: 'Spendzy Finance',
+        short_name: 'Spendzy',
+        description: 'Modern family finance tracker',
+        theme_color: '#0f172a',
+        background_color: '#0f172a',
+      }
+    })
+  ],
+})

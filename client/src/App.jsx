@@ -13,7 +13,9 @@ import Auth from './views/Auth';
 import Goals from './views/Goals';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const savedUser = JSON.parse(localStorage.getItem('spendzy_user') || 'null');
+
+  const [isAuthenticated, setIsAuthenticated] = useState(!!savedUser);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [theme, setTheme] = useState('dark');
   const [unreadCount, setUnreadCount] = useState(0);
@@ -25,18 +27,20 @@ function App() {
     messages: []
   });
 
-  const [userData, setUserData] = useState({
+  const [userData, setUserData] = useState(savedUser || {
     name: 'Jane Doe',
     family: 'The Sharma Household',
     role: 'Admin'
   });
 
   const handleAuthComplete = (data) => {
-    setUserData({
+    const user = {
       name: data.name,
       family: data.family,
       role: data.role
-    });
+    };
+    localStorage.setItem('spendzy_user', JSON.stringify(user));
+    setUserData(user);
     setFamilyData((prev) => ({
       ...prev,
       income: data.income,

@@ -106,17 +106,14 @@ const ExpenseTracker = ({ userData, familyData }) => {
 
           {/* AI Receipt Scanner Drag/Drop Mock */}
           <div 
-            onClick={handleSimulateScan}
             style={{
               width: '100%',
-              padding: '2rem',
+              padding: '1.5rem',
               border: '2px dashed rgba(255,255,255,0.2)',
               borderRadius: '8px',
               textAlign: 'center',
-              cursor: 'pointer',
               marginBottom: '1.5rem',
               background: isScanning ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
-              transition: 'var(--transition)',
               position: 'relative',
               overflow: 'hidden'
             }}
@@ -136,9 +133,16 @@ const ExpenseTracker = ({ userData, familyData }) => {
                 }}
               />
             )}
-            <p style={{ color: isScanning ? 'var(--primary)' : 'var(--text-muted)' }}>
-              {isScanning ? '🔍 AI Analyzing Receipt...' : '📁 Click or Drag Receipt to Auto-fill'}
-            </p>
+            <input 
+               type="file" 
+               id="receipt-upload" 
+               style={{ display: 'none' }} 
+               onChange={handleSimulateScan}
+               accept="image/*,.pdf" 
+            />
+            <label htmlFor="receipt-upload" style={{ cursor: 'pointer', color: isScanning ? 'var(--primary)' : 'var(--text-muted)', display: 'block', width: '100%' }}>
+              {isScanning ? '🔍 AI Analyzing Uploaded Receipt...' : '📁 Upload Receipt for AI Auto-fill'}
+            </label>
           </div>
 
           <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>

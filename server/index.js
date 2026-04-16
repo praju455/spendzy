@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 require('dotenv').config();
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
 const server = http.createServer(app);
@@ -96,24 +97,41 @@ io.on('connection', (socket) => {
     });
   });
 
-  // AI Context Resolver
-  socket.on('ai_query', (text) => {
-    const txt = text.toLowerCase();
-    let reply = "I'm not sure about that specific data query. Try asking about 'spending this month' or 'who spent the most'.";
-    
-    const rent = familyData.rent;
-    const totalExp = familyData.expenses.reduce((acc, curr) => acc + curr.amount, rent);
+  // True Generative LLM Context Resolver
+  socket.on('ai_query', async (text) => {
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error('GEMINI_API_KEY NOT SET');
+      }
 
-    if(txt.includes('how much') || txt.includes('this month') || txt.includes('spending')) {
-      reply = `Based on the real-time database, your household has spent ₹${totalExp.toLocaleString('en-IN')} so far this month mostly on Rent and Groceries.`;
-    } else if (txt.includes('who spent')) {
-      reply = `Admins have logged the vast majority of transactions this cycle, while 'Roommate' has zero approved transactions.`;
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+      const prompt = `
+        You are Spendzy, an intelligent, helpful, and concise family finance assistant chatbot.
+        You have direct access to the household's live financial data.
+        Analyze this exact real-time state database to answer the user's query playfully but accurately.
+        If they ask for something not present, tell them you don't know based on current data.
+        Keep your response brief, friendly, and formatted nicely.
+        
+        Live Family JSON Database:
+        ${JSON.stringify(familyData)}
+
+        User's Query: "${text}"
+      `;
+
+      const result = await model.generateContent(prompt);
+      const reply = result.response.text();
+      socket.emit('ai_response', { sender: 'bot', text: reply });
+      
+    } catch (error) {
+      console.error(error);
+      const fallbackMsg = error.message.includes('GEMINI_API_KEY') 
+        ? "Please set your GEMINI_API_KEY in the /server/.env file so I can access my true LLM brain!" 
+        : "Sorry, I encountered an error connecting to the AI brain.";
+      socket.emit('ai_response', { sender: 'bot', text: fallbackMsg });
     }
-
-    // Delay response slightly to simulate AI processing
-    setTimeout(() => {
-        socket.emit('ai_response', { sender: 'bot', text: reply });
-    }, 1000);
   });
 
   socket.on('disconnect', () => {

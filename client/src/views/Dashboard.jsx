@@ -3,6 +3,7 @@ import { Wifi, Trophy } from 'lucide-react';
 import { motion } from 'framer-motion';
 import GlassCard from '../components/GlassCard';
 import ExpenseChart from '../components/ExpenseChart';
+import HistoricalAnalytics from '../components/HistoricalAnalytics';
 
 const Dashboard = ({ familyData }) => {
   const income = familyData.income || 150000;
@@ -70,6 +71,8 @@ const Dashboard = ({ familyData }) => {
           </div>
         </GlassCard>
       </div>
+      
+      <HistoricalAnalytics familyData={familyData} />
     </motion.section>
   );
 };

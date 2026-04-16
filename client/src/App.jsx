@@ -10,6 +10,7 @@ import Subscriptions from './views/Subscriptions';
 import BillReminders from './views/BillReminders';
 import AIChatbot from './views/AIChatbot';
 import Auth from './views/Auth';
+import Goals from './views/Goals';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -102,6 +103,8 @@ function App() {
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard familyData={familyData} />;
+      case 'goals':
+        return <Goals familyData={familyData} />;
       case 'chat':
         return <Chat userData={userData} />;
       case 'expenses':

@@ -6,12 +6,14 @@ import {
   Calendar, 
   Video, 
   Bell, 
-  Bot 
+  Bot,
+  Target
 } from 'lucide-react';
 
 const Sidebar = ({ activeTab, setActiveTab, unreadCount, userData }) => {
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={20} /> },
+    { id: 'goals', label: 'Goals & Simulator', icon: <Target size={20} /> },
     { id: 'expenses', label: 'Expense Tracker', icon: <Receipt size={20} /> },
     { id: 'chat', label: 'Family Chat', icon: <MessageSquare size={20} />, badge: unreadCount > 0 ? 'New' : null },
     { id: 'calendar', label: 'Calendar View', icon: <Calendar size={20} /> },

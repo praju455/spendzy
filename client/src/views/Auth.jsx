@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import GlassCard from '../components/GlassCard';
 
 const Auth = ({ onAuthComplete }) => {
-  const [step, setStep] = useState('welcome'); // welcome, create, join, otp, rent
+  const [step, setStep] = useState('welcome'); // welcome, create, create-members, join, otp, rent
   const [famName, setFamName] = useState('');
   const [income, setIncome] = useState('');
   const [adminName, setAdminName] = useState('');
+  const [familySize, setFamilySize] = useState('2');
+  const [members, setMembers] = useState([]);
   
   const [joinCode, setJoinCode] = useState('');
   const [joinName, setJoinName] = useState('');
@@ -16,15 +18,35 @@ const Auth = ({ onAuthComplete }) => {
   const [otpTimer, setOtpTimer] = useState(120);
 
   const [generatedCode, setGeneratedCode] = useState('');
+  const [error, setError] = useState('');
 
   const handleCreate = () => {
+    if (!famName || !adminName || !income || !familySize) {
+      return setError('Please fill in all household details.');
+    }
+    setError('');
+    // Generate array of objects for members
+    const newMembers = Array.from({ length: parseInt(familySize) || 1 }, () => ({ name: '', email: '', relation: 'Member' }));
+    setMembers(newMembers);
+    setStep('create-members');
+  };
+
+  const handleMembersSubmit = () => {
+    const isAnyMemberEmpty = members.some(m => !m.name || !m.email);
+    if (isAnyMemberEmpty) {
+      return setError('Please enter credentials for all family members.');
+    }
+    setError('');
     const code = "SPEND" + Math.floor(100 + Math.random() * 900);
     setGeneratedCode(code);
     setStep('create-success');
   };
 
   const handleJoin = () => {
-    if (!joinCode) return;
+    if (!joinCode || !joinName) {
+      return setError('Please enter a valid household code and your name.');
+    }
+    setError('');
     if (!otpSent) {
       setOtpSent(true);
       setStep('otp');
@@ -38,6 +60,10 @@ const Auth = ({ onAuthComplete }) => {
   };
 
   const completeAuth = (roleType, name) => {
+    if (step === 'rent' && !rent && roleType === 'Admin') {
+      return setError('Please enter your household rent or mortgage.');
+    }
+    setError('');
     onAuthComplete({
       name: name || 'User',
       family: famName || 'Spendzy Hub',
@@ -51,8 +77,14 @@ const Auth = ({ onAuthComplete }) => {
   return (
     <div className="auth-wrapper" style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, background: 'var(--bg-base)' }}>
       <GlassCard className="auth-card" style={{ width: '100%', maxWidth: '450px', padding: '3rem 2.5rem' }}>
-        <h1 style={{ textAlign: 'center', fontSize: '2.5rem', marginBottom: '2rem' }}>Spendzy</h1>
+        <h1 style={{ textAlign: 'center', fontSize: '2.5rem', marginBottom: '1.5rem' }}>Spendzy</h1>
         
+        {error && (
+          <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--danger)', padding: '0.8rem', borderRadius: '8px', color: 'var(--danger)', marginBottom: '1.5rem', textAlign: 'center', fontSize: '0.9rem' }}>
+            {error}
+          </div>
+        )}
+
         {step === 'welcome' && (
           <div style={{ textAlign: 'center' }}>
             <h2>Welcome Home</h2>
@@ -79,7 +111,66 @@ const Auth = ({ onAuthComplete }) => {
               <label>Total Monthly Fixed Income (₹)</label>
               <input type="number" placeholder="150000" value={income} onChange={e => setIncome(e.target.value)} />
             </div>
+            <div className="input-group">
+              <label>How many members are there in your family?</label>
+              <input type="number" placeholder="4" value={familySize} onChange={e => setFamilySize(e.target.value)} min="1" max="10" />
+            </div>
             <button className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} onClick={handleCreate}>
+              Next: Invite Members
+            </button>
+          </div>
+        )}
+
+        {step === 'create-members' && (
+          <div>
+            <h3>Add Family Members</h3>
+            <p className="mb-4">Enter credentials for {familySize} members so we can track individual expenditures.</p>
+            <div style={{ maxHeight: '300px', overflowY: 'auto', paddingRight: '10px' }}>
+              {members.map((member, idx) => (
+                <div key={idx} style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
+                  <h4 style={{ marginBottom: '1rem', fontSize: '0.9rem', color: 'var(--primary)' }}>Member {idx + 1}</h4>
+                  <div className="input-group">
+                    <label>Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Rahul" 
+                      value={member.name} 
+                      onChange={e => {
+                        const m = [...members]; m[idx].name = e.target.value; setMembers(m);
+                      }} 
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label>Email Address</label>
+                    <input 
+                      type="email" 
+                      placeholder="rahul@example.com" 
+                      value={member.email} 
+                      onChange={e => {
+                        const m = [...members]; m[idx].email = e.target.value; setMembers(m);
+                      }} 
+                    />
+                  </div>
+                  <div className="input-group" style={{ marginBottom: 0 }}>
+                    <label>Relation</label>
+                    <select 
+                      className="styled-select"
+                      value={member.relation || 'Member'}
+                      onChange={e => {
+                        const m = [...members]; m[idx].relation = e.target.value; setMembers(m);
+                      }}
+                    >
+                      <option value="Parent">Parent</option>
+                      <option value="Child">Child</option>
+                      <option value="Spouse">Spouse</option>
+                      <option value="Sibling">Sibling</option>
+                      <option value="Member">Other Member</option>
+                    </select>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button className="btn btn-primary" style={{ width: '100%', marginTop: '1.5rem' }} onClick={handleMembersSubmit}>
               Generate Household Code
             </button>
           </div>

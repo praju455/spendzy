@@ -117,7 +117,7 @@ const Auth = ({ onAuthComplete }) => {
                       }} 
                     />
                   </div>
-                  <div className="input-group" style={{ marginBottom: 0 }}>
+                  <div className="input-group">
                     <label>Email Address</label>
                     <input 
                       type="email" 
@@ -127,6 +127,22 @@ const Auth = ({ onAuthComplete }) => {
                         const m = [...members]; m[idx].email = e.target.value; setMembers(m);
                       }} 
                     />
+                  </div>
+                  <div className="input-group" style={{ marginBottom: 0 }}>
+                    <label>Relation</label>
+                    <select 
+                      className="styled-select"
+                      value={member.relation || 'Member'}
+                      onChange={e => {
+                        const m = [...members]; m[idx].relation = e.target.value; setMembers(m);
+                      }}
+                    >
+                      <option value="Parent">Parent</option>
+                      <option value="Child">Child</option>
+                      <option value="Spouse">Spouse</option>
+                      <option value="Sibling">Sibling</option>
+                      <option value="Member">Other Member</option>
+                    </select>
                   </div>
                 </div>
               ))}

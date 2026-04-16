@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spendzy | Smart Family Finances</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- FullCalendar CDN -->
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js'></script>
+  
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Central Authentication Flow -->
+  <div id="auth-screen" class="auth-wrapper">
+    
+    <div id="step-routing" class="auth-card glass glass-glow active-step" style="max-width: 500px; text-align:center;">
+      <div class="logo" style="justify-content: center; margin-bottom: 2rem;">
+        <div class="logo-icon"><i class="fa-solid fa-wallet"></i></div>
+        <h2 style="font-size:2rem;">Spendzy</h2>
+      </div>
+      <h3 style="margin-bottom: 1rem;">Family Financial Manager</h3>
+      <p style="margin-bottom: 2.5rem;">Securely manage your household wealth with real-time sync.</p>
+      
+      <div style="display:flex; gap:1rem; flex-direction:column;">
+        <button class="btn btn-primary" style="padding:1rem;" onclick="goToAuthStep('step-routing', 'step-join')"><i class="fa-solid fa-right-to-bracket"></i> Log In / Join Existing Family</button>
+        <div style="margin: 1rem 0; color:var(--text-muted); font-size:0.9rem;">
+          <span style="display:inline-block; border-bottom:1px solid rgba(255,255,255,0.2); width:30%; vertical-align:middle; margin:0 10px;"></span>
+          New User? Sign Up Below
+          <span style="display:inline-block; border-bottom:1px solid rgba(255,255,255,0.2); width:30%; vertical-align:middle; margin:0 10px;"></span>
+        </div>
+        <button class="btn btn-outline" style="padding:1rem;" onclick="goToAuthStep('step-routing', 'step-create')"><i class="fa-solid fa-people-roof"></i> Create New Family Group</button>
+      </div>
+    </div>
+
+    <!-- Create Family Workflow -->
+    <div id="step-create" class="auth-card glass glass-glow hidden-step" style="max-width: 500px;">
+      <h2 style="margin-bottom: 1.5rem;"><i class="fa-solid fa-crown" style="color:var(--primary); margin-right: 0.5rem;"></i> Create Spendzy Group</h2>
+      
+      <div class="input-group">
+        <label>Family Name</label>
+        <input type="text" id="createFamName" placeholder="e.g. The Sharma Household">
+      </div>
+      <div class="input-group">
+        <label>Total Family Income (Monthly)</label>
+        <input type="number" id="createIncome" placeholder="e.g. 150000">
+      </div>
+      <div class="input-group">
+        <label>Admin Name (You)</label>
+        <input type="text" id="createAdminName" placeholder="Jane Doe">
+      </div>
+      <div class="input-group">
+        <label>Set Secure Password</label>
+        <input type="password" id="createPassword" placeholder="Strong password...">
+      </div>
+
+      <button class="btn btn-primary" style="width:100%; margin-top: 1rem;" onclick="handleCreateFamily()"><i class="fa-solid fa-lock"></i> Create Encrypted Group</button>
+      <button class="btn btn-outline" style="width:100%; margin-top: 1rem; border:none;" onclick="goToAuthStep('step-create', 'step-routing')">Back</button>
+    </div>
+
+    <!-- Join Family Workflow -->
+    <div id="step-join" class="auth-card glass glass-glow hidden-step">
+      <h2 style="margin-bottom: 1.5rem;"><i class="fa-solid fa-user-plus" style="color:var(--secondary); margin-right: 0.5rem;"></i> Join / Login</h2>
+      <p style="font-size:0.85rem; margin-bottom:1.5rem; color:var(--text-muted);">Enter your 6-digit alphanumic Family Code.</p>
+      
+      <div id="auth-error-box" class="hidden" style="background:rgba(239, 68, 68, 0.2); color:var(--danger); padding:0.8rem; border-radius:0.5rem; margin-bottom:1rem; font-weight:600; text-align:center;">
+        Invalid family credentials
+      </div>
+
+      <div class="input-group">
+        <label>Family Code</label>
+        <input type="text" id="joinFamCode" placeholder="e.g. SPEND123" style="text-transform:uppercase; font-family:monospace; font-size:1.2rem; letter-spacing:2px; text-align:center;">
+      </div>
+      <div class="input-group">
+        <label>Password</label>
+        <input type="password" id="joinPassword" placeholder="••••••••">
+      </div>
+      
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1rem;">
+        <div class="input-group mt-0">
+          <label>Your Name</label>
+          <input type="text" id="joinUserName" placeholder="Name">
+        </div>
+        <div class="input-group mt-0">
+          <label>Member Type</label>
+          <select id="joinRoleType" class="styled-select" style="padding: 0.75rem;">
+            <option value="Working">Working</option>
+            <option value="Student">Student</option>
+            <option value="Housewife">Housewife</option>
+            <option value="Roommate">Roommate</option>
+            <option value="Admin">Admin</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- OTP Mock Flow -->
+      <div id="otp-section" class="hidden">
+         <div class="input-group">
+          <label>2FA OTP sent to registered device (<span id="otpTimer">02:00</span>)</label>
+          <input type="text" id="joinOtp" placeholder="Enter OTP 1234">
+        </div>
+        <div style="display:flex; justify-content:space-between; margin-bottom:1rem; font-size:0.8rem;">
+           <a href="#" style="color:var(--primary)" onclick="alert('OTP Resent!')">Resend OTP</a>
+           <a href="#" style="color:var(--warning)" onclick="alert('Premium Feature: Upgrade to Spendzy+ for WhatsApp priority verification and unlimited OTPs.')">Upgrade to Premium</a>
+        </div>
+      </div>
+
+      <button id="authBtnSubmit" class="btn btn-primary" style="width:100%;" onclick="handleJoinFamily()"><i class="fa-solid fa-key"></i> Request OTP</button>
+      <button class="btn btn-outline" style="width:100%; margin-top: 1rem; border:none;" onclick="goToAuthStep('step-join', 'step-routing')">Back</button>
+    </div>
+
+  </div> 
+
+  <!-- Monthly Rent Capture Modal -->
+  <div id="rentModal" class="modal-overlay">
+    <div class="modal card glass glass-glow">
+      <div class="modal-icon"><i class="fa-solid fa-house-chimney" style="color:var(--success)"></i></div>
+      <h2>One final step...</h2>
+      <p class="mb-4">To configure automated Bill Reminders, please enter your current monthly house rent.</p>
+      
+      <div class="input-group" style="text-align:left;">
+        <label>Monthly House Rent (₹)</label>
+        <input type="number" id="monthlyRentInput" placeholder="25000" style="font-size:1.5rem; text-align:center;">
+      </div>
+      
+      <button class="btn btn-success mt-2" style="width:100%;" onclick="submitRentAndEnter()"><i class="fa-solid fa-check"></i> Save & Enter App</button>
+    </div>
+  </div>
+
+  <div id="codeModal" class="modal-overlay">
+    <div class="modal card glass glass-glow">
+      <div class="modal-icon"><i class="fa-solid fa-shield-halved" style="color:var(--primary)"></i></div>
+      <h2 style="color:var(--success)">Family Created Successfully</h2>
+      <p>Secure this code. Others need it to join your Spendzy group.</p>
+      <div style="background:rgba(0,0,0,0.4); padding:1.5rem; font-family:monospace; font-size:3rem; letter-spacing:8px; border-radius:1rem; margin:1.5rem 0; font-weight:700; color:var(--primary)" id="generatedCodeDisplay">
+        SPEND1
+      </div>
+      <div style="display:flex; gap:1rem;">
+        <button class="btn btn-outline" style="flex:1;" onclick="alert('Code Copied to clipboard! Share it securely.')"><i class="fa-regular fa-copy"></i> Copy Code</button>
+        <button class="btn btn-primary" style="flex:1;" onclick="closeCodeModalAndPromptRent()">Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Application Wrapper -->
+  <div id="main-app" class="app-container hidden">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-icon"><i class="fa-solid fa-wallet"></i></div>
+        <h2>Spendzy</h2>
+      </div>
+      <nav class="nav-menu">
+        <a href="#" class="nav-item active" data-target="dashboard"><i class="fa-solid fa-chart-pie"></i><span>Dashboard</span></a>
+        <a href="#" class="nav-item" data-target="expense-tracker"><i class="fa-solid fa-receipt"></i><span>Expense Tracker</span></a>
+        <a href="#" class="nav-item" data-target="family-chat">
+          <i class="fa-regular fa-comments"></i><span>Family Chat</span>
+          <span class="badge" style="background:var(--danger); margin-left:auto; font-size:0.6rem; padding:0.2rem 0.5rem" id="unreadBadge">New</span>
+        </a>
+        <a href="#" class="nav-item" data-target="calendar-trends"><i class="fa-regular fa-calendar-days"></i><span>Calendar View</span></a>
+        <a href="#" class="nav-item" data-target="subscriptions"><i class="fa-brands fa-youtube"></i><span>Subscriptions</span></a>
+        <a href="#" class="nav-item" data-target="bill-reminders"><i class="fa-solid fa-file-invoice"></i><span>Bill Reminders</span></a>
+        <a href="#" class="nav-item" data-target="ai-advisor" style="margin-top:auto;"><i class="fa-solid fa-robot"></i><span style="color:var(--secondary); font-weight:600;">AI Chatbot</span></a>
+      </nav>
+      <div class="user-profile mt-4">
+        <img id="displayAvatar" src="https://ui-avatars.com/api/?name=User&background=2563eb&color=fff" alt="User" class="avatar">
+        <div class="user-info">
+          <h4 id="displayUserName">Admin Setup</h4>
+          <p id="displayFamilyName">Household</p>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-header">
+        <div class="search-bar">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" placeholder="Explore your wealth...">
+        </div>
+        <div class="header-actions">
+          <div class="action-btn" title="Speak an Expense" onclick="startVoiceRecognition()"><i class="fa-solid fa-microphone"></i></div>
+          <div class="action-btn" title="Toggle Theme" onclick="toggleTheme()"><i class="fa-solid fa-moon"></i></div>
+          <div class="action-btn notifications active-notif" title="Settings"><i class="fa-solid fa-gear"></i></div>
+        </div>
+      </header>
+
+      <!-- 1. DASHBOARD VIEW -->
+      <section id="dashboard" class="view-section active-view">
+        <div class="view-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h1 id="dashboard-title">Family Dashboard</h1>
+            <p class="subtitle">Real-time financial synchronization.</p>
+          </div>
+          <div class="badge" style="background:rgba(16,185,129,0.2); color:var(--success); padding:0.5rem 1rem;">
+             <i class="fa-solid fa-wifi"></i> WebSocket Live
+          </div>
+        </div>
+
+        <div class="grid-layout cols-4 mb-2">
+          <div class="card glass mini-stat border-primary">
+            <p>Wallet & Bank Balance</p>
+            <h3 class="counter" data-target="145000" id="walletBalanceUI">0</h3>
+          </div>
+          <div class="card glass mini-stat border-warning">
+            <p>Pending Approvals</p>
+            <h3 id="pendingCountUI">1</h3>
+          </div>
+          <div class="card glass mini-stat border-success">
+            <p>Monthly Income</p>
+            <h3 id="dashIncomeOutput">₹ 150000</h3>
+          </div>
+          <div class="card glass mini-stat border-danger">
+            <p>Monthly Expenses</p>
+            <h3 id="dashRentOutput">₹ 64,000</h3>
+          </div>
+        </div>
+
+        <div class="grid-layout mt-4" style="grid-template-columns: 2fr 1fr;">
+          <div>
+            <!-- structural pushing -->
+          </div> 
+          <div class="card glass border-success" style="background: linear-gradient(135deg, rgba(16,185,129,0.1), transparent);">
+            <h3 style="color:var(--success)"><i class="fa-solid fa-trophy"></i> Super Saver of the Month</h3>
+            <div style="display:flex; align-items:center; gap:1rem; margin-top:1rem;">
+              <img src="https://ui-avatars.com/api/?name=Son&background=10b981&color=fff" class="avatar" style="width:60px; height:60px; border-color:var(--success);">
+              <div>
+                <h4 style="margin:0;">Son (Viewer)</h4>
+                <p class="microcopy">Cut junk food expenses by 40%</p>
+                <div class="badge success" style="margin-top:0.5rem; padding: 0.3rem 0.6rem;">+ ₹ 1,200 Saved</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. EXPENSE TRACKER (With True Voice) -->
+      <section id="expense-tracker" class="view-section hidden-view">
+        <div class="view-header">
+          <h1>Track & Split Expenses</h1>
+          <p class="subtitle">Use the microphone to dictact: "Add expense 500"</p>
+        </div>
+
+        <div class="grid-layout">
+          <div class="card glass relative">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <h3>Record Expense</h3>
+              <div style="display:flex; gap:0.5rem;">
+                <button class="btn btn-outline" id="micBtn" style="padding:0.5rem; transition: background 0.3s;" onclick="startVoiceRecognition()"><i class="fa-solid fa-microphone"></i></button>
+              </div>
+            </div>
+
+            <div class="form-grid mt-4">
+              <div class="input-group">
+                <label>Expense Name</label>
+                <input type="text" id="expName" placeholder="e.g. Reliance Fresh">
+              </div>
+              <div class="input-group">
+                <label>Amount (₹)</label>
+                <input type="number" id="expAmt" placeholder="500">
+              </div>
+              <div class="input-group">
+                <label>Category</label>
+                <select class="styled-select" id="expCat">
+                  <option>🛒 Groceries</option>
+                  <option>🏠 Rent</option>
+                  <option>⚡ Utility</option>
+                  <option>🛍️ Shopping</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" style="grid-column: span 2;" onclick="logExpenseToDB()"><i class="fa-solid fa-paper-plane"></i> Submit for Approval / Add</button>
+            </div>
+            <p id="voiceFeedback" style="color:var(--success); font-size:0.85rem; margin-top:1rem; opacity:0; transition:opacity 0.3s;">Voice command parsed successfully.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. REAL-TIME FAMILY CHAT -->
+      <section id="family-chat" class="view-section hidden-view">
+         <div class="view-header" style="display:flex; justify-content:space-between;">
+           <div>
+            <h1>Family Group Chat</h1>
+            <p class="subtitle">Broadcasts live across all active devices via WebSockets (simulated).</p>
+           </div>
+           <span class="badge success" style="height:fit-content;"><i class="fa-solid fa-circle" style="font-size:0.5rem;"></i> Online</span>
+        </div>
+
+        <div class="grid-layout">
+          <!-- Chat Window -->
+          <div class="card glass chat-container" style="min-height:500px;">
+            <div class="chat-messages" id="live-chat-box" style="flex:1;">
+              
+              <div class="message user" style="align-self:flex-start; flex-direction:row;">
+                <div class="msg-avatar" style="background:#f59e0b"><i class="fa-solid fa-child"></i></div>
+                <div class="msg-bubble" style="background:rgba(255,255,255,0.05); border:1px solid var(--glass-border); border-top-left-radius:0;">
+                  <strong style="color:var(--text-muted); font-size:0.8rem;">Roommate</strong>
+                  <p>I just bought ₹2000 of groceries. Logging it in the system.</p>
+                  <small style="color:var(--text-muted); font-size:0.7rem; display:block; margin-top:5px; text-align:right;">11:42 AM</small>
+                </div>
+              </div>
+
+            </div>
+            <div class="chat-input-area border-t mt-4 pt-4" style="border-top:1px solid rgba(255,255,255,0.1); padding-top:1rem; display:flex; gap:1rem;">
+              <input type="text" id="liveChatInput" placeholder="Type a family message..." style="flex:1; background:rgba(15,23,42,0.8); border:1px solid var(--glass-border); padding:1rem; border-radius:1rem; color:white;">
+              <button class="btn btn-primary" onclick="sendRealtimeMessage()"><i class="fa-solid fa-paper-plane"></i> Send</button>
+            </div>
+          </div>
+
+          <!-- Expense Approvals Logic -->
+          <div class="card glass border-warning">
+            <h3 style="color:var(--warning); margin-bottom:1rem;"><i class="fa-solid fa-gavel"></i> Pending Approvals</h3>
+            <p class="microcopy mb-4">Admins manage these automatically synced requests.</p>
+
+            <div id="approvalsContainer">
+               <!-- Injection point for dynamic approvals -->
+               <div class="bill-item" id="appMock1" style="flex-direction:column; align-items:flex-start; gap:1rem; padding:1rem;">
+                <div style="display:flex; gap:1rem; width:100%;">
+                  <div class="bill-icon" style="background:#ec489944; color:#f472b6"><i class="fa-solid fa-money-bill"></i></div>
+                  <div>
+                    <h4>Large Expense Request</h4>
+                    <p>Status: <strong class="text-danger">Pending</strong></p>
+                    <h3 class="mt-2 text-danger">₹ 15,000</h3>
+                  </div>
+                </div>
+                <div style="display:flex; gap:0.5rem; width:100%;">
+                  <button class="btn btn-outline" style="flex:1;" onclick="handleApproval('appMock1', 'Rejected')">Reject</button>
+                  <button class="btn btn-success" style="flex:1;" onclick="handleApproval('appMock1', 'Approved')"><i class="fa-solid fa-check"></i> Approve</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. CALENDAR VIEW (FULLCALENDAR) -->
+      <section id="calendar-trends" class="view-section hidden-view">
+        <div class="view-header">
+          <h1>Interactive Calendar View</h1>
+          <p class="subtitle">Dynamically loading DB entries via FullCalendar.io</p>
+        </div>
+
+        <div class="card glass windowHeightFix">
+          <!-- The container FullCalendar will inject into -->
+          <div id="calendar" style="width:100%; height: 600px; color:var(--text-main);"></div>
+        </div>
+      </section>
+
+      <!-- 5. SUBSCRIPTIONS -->
+      <section id="subscriptions" class="view-section hidden-view">
+        <div class="view-header">
+          <h1>Subscription Detector</h1>
+        </div>
+        <div class="grid-layout cols-3">
+          <!-- Netflix -->
+          <div class="card glass finding-card relative border-warning">
+            <span class="badge" style="background:var(--warning); color:black; position:absolute; top:1rem; right:1rem;">Expiring Soon</span>
+            <div class="logo-circle" style="background:#E50914"><i class="fa-solid fa-play"></i></div>
+            <h3 class="mt-2 text-center">Netflix</h3>
+            <h2 class="text-center mt-2">₹ 499<span style="font-size:1rem;color:var(--text-muted)">/mo</span></h2>
+          </div>
+          <!-- Amazon Prime -->
+          <div class="card glass finding-card relative border-success">
+            <span class="badge success" style="position:absolute; top:1rem; right:1rem;">On going</span>
+            <div class="logo-circle" style="background:#00A8E1"><i class="fa-brands fa-amazon"></i></div>
+            <h3 class="mt-2 text-center">Amazon Prime</h3>
+            <h2 class="text-center mt-2">₹ 299<span style="font-size:1rem;color:var(--text-muted)">/mo</span></h2>
+          </div>
+          <!-- Spotify -->
+          <div class="card glass finding-card relative border-danger" style="opacity: 0.7;">
+            <span class="badge" style="background:var(--danger); position:absolute; top:1rem; right:1rem;">Expired Plan</span>
+            <div class="logo-circle" style="background:#1DB954"><i class="fa-brands fa-spotify"></i></div>
+            <h3 class="mt-2 text-center">Spotify</h3>
+            <h2 class="text-center mt-2">₹ 119<span style="font-size:1rem;color:var(--text-muted)">/mo</span></h2>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. BILL REMINDERS & UPI DEEP LINKING -->
+      <section id="bill-reminders" class="view-section hidden-view">
+        <div class="view-header">
+          <h1>Bill Reminders</h1>
+          <p class="subtitle">Properly formatted UPI Deep Links to launch GPay/PhonePe.</p>
+        </div>
+
+        <div class="grid-layout">
+          <div class="card glass border-danger">
+            <h3 style="color:var(--danger); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom:1rem; margin-bottom:1rem;">
+              <i class="fa-solid fa-circle-exclamation"></i> Overdue
+            </h3>
+            
+            <div class="bill-item overdue mb-4">
+              <div class="bill-icon"><i class="fa-solid fa-bolt"></i></div>
+              <div class="bill-details">
+                <h4>Electricity Bill</h4>
+                <p>Due: <strong>Tomorrow</strong></p>
+              </div>
+              <div class="bill-action">
+                <h3 style="color:var(--danger); margin-bottom: 0.5rem;">₹ 2,000</h3>
+                <!-- EXACT UPI DEEP LINKING FORMAT per specs -->
+                <a href="upi://pay?pa=dummybill@upi&pn=Electricity_Board&am=2000.00&cu=INR" target="_blank" onclick="trackPaymentSuccess(this)" class="btn btn-primary" style="text-decoration:none;"><i class="fa-solid fa-qrcode"></i> Pay via UPI</a>
+                <p class="microcopy mt-2 pay-status" style="display:none; color:var(--success);">Tracking response...</p>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. DYNAMIC AI CHATBOT -->
+      <section id="ai-advisor" class="view-section hidden-view">
+        <div class="view-header">
+          <h1 style="color:var(--secondary)"><i class="fa-solid fa-robot"></i> Context-Aware Chatbot</h1>
+          <p class="subtitle">Uses dynamic query mapping to generate appropriate responses.</p>
+        </div>
+
+        <div class="chat-container card glass glass-glow">
+          <div class="chat-messages" id="bot-chat-box">
+            <div class="message bot">
+              <div class="msg-avatar"><i class="fa-solid fa-robot"></i></div>
+              <div class="msg-bubble">
+                <p>Hi there! 👋 I am Spendzy's dynamic AI. Ask me things like "How much did we spend this month?" or "Who spent the most?"</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="chat-input-area border-t mt-4 pt-4" style="border-top:1px solid rgba(255,255,255,0.1); padding-top:1rem; display:flex; gap:1rem;">
+            <input type="text" id="botInput" placeholder="Type a command..." style="flex:1; background:rgba(15,23,42,0.8); border:1px solid var(--glass-border); padding:1rem; border-radius:1rem; color:white;">
+            <button class="btn btn-primary" onclick="handleBotQuery()"><i class="fa-solid fa-paper-plane"></i> Send Query</button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

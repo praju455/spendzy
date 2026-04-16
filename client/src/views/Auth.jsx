@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import GlassCard from '../components/GlassCard';
 
 const Auth = ({ onAuthComplete }) => {
-  const [step, setStep] = useState('welcome'); // welcome, create, join, otp, rent
+  const [step, setStep] = useState('welcome'); // welcome, create, create-members, join, otp, rent
   const [famName, setFamName] = useState('');
   const [income, setIncome] = useState('');
   const [adminName, setAdminName] = useState('');
+  const [familySize, setFamilySize] = useState('2');
+  const [members, setMembers] = useState([]);
   
   const [joinCode, setJoinCode] = useState('');
   const [joinName, setJoinName] = useState('');
@@ -18,6 +20,13 @@ const Auth = ({ onAuthComplete }) => {
   const [generatedCode, setGeneratedCode] = useState('');
 
   const handleCreate = () => {
+    // Generate array of objects for members
+    const newMembers = Array.from({ length: parseInt(familySize) || 1 }, () => ({ name: '', email: '' }));
+    setMembers(newMembers);
+    setStep('create-members');
+  };
+
+  const handleMembersSubmit = () => {
     const code = "SPEND" + Math.floor(100 + Math.random() * 900);
     setGeneratedCode(code);
     setStep('create-success');
@@ -79,7 +88,50 @@ const Auth = ({ onAuthComplete }) => {
               <label>Total Monthly Fixed Income (₹)</label>
               <input type="number" placeholder="150000" value={income} onChange={e => setIncome(e.target.value)} />
             </div>
+            <div className="input-group">
+              <label>How many members are there in your family?</label>
+              <input type="number" placeholder="4" value={familySize} onChange={e => setFamilySize(e.target.value)} min="1" max="10" />
+            </div>
             <button className="btn btn-primary" style={{ width: '100%', marginTop: '1rem' }} onClick={handleCreate}>
+              Next: Invite Members
+            </button>
+          </div>
+        )}
+
+        {step === 'create-members' && (
+          <div>
+            <h3>Add Family Members</h3>
+            <p className="mb-4">Enter credentials for {familySize} members so we can track individual expenditures.</p>
+            <div style={{ maxHeight: '300px', overflowY: 'auto', paddingRight: '10px' }}>
+              {members.map((member, idx) => (
+                <div key={idx} style={{ background: 'rgba(255,255,255,0.03)', padding: '1rem', borderRadius: '8px', marginBottom: '1rem' }}>
+                  <h4 style={{ marginBottom: '1rem', fontSize: '0.9rem', color: 'var(--primary)' }}>Member {idx + 1}</h4>
+                  <div className="input-group">
+                    <label>Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. Rahul" 
+                      value={member.name} 
+                      onChange={e => {
+                        const m = [...members]; m[idx].name = e.target.value; setMembers(m);
+                      }} 
+                    />
+                  </div>
+                  <div className="input-group" style={{ marginBottom: 0 }}>
+                    <label>Email Address</label>
+                    <input 
+                      type="email" 
+                      placeholder="rahul@example.com" 
+                      value={member.email} 
+                      onChange={e => {
+                        const m = [...members]; m[idx].email = e.target.value; setMembers(m);
+                      }} 
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <button className="btn btn-primary" style={{ width: '100%', marginTop: '1.5rem' }} onClick={handleMembersSubmit}>
               Generate Household Code
             </button>
           </div>

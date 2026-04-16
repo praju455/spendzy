@@ -18,22 +18,35 @@ const Auth = ({ onAuthComplete }) => {
   const [otpTimer, setOtpTimer] = useState(120);
 
   const [generatedCode, setGeneratedCode] = useState('');
+  const [error, setError] = useState('');
 
   const handleCreate = () => {
+    if (!famName || !adminName || !income || !familySize) {
+      return setError('Please fill in all household details.');
+    }
+    setError('');
     // Generate array of objects for members
-    const newMembers = Array.from({ length: parseInt(familySize) || 1 }, () => ({ name: '', email: '' }));
+    const newMembers = Array.from({ length: parseInt(familySize) || 1 }, () => ({ name: '', email: '', relation: 'Member' }));
     setMembers(newMembers);
     setStep('create-members');
   };
 
   const handleMembersSubmit = () => {
+    const isAnyMemberEmpty = members.some(m => !m.name || !m.email);
+    if (isAnyMemberEmpty) {
+      return setError('Please enter credentials for all family members.');
+    }
+    setError('');
     const code = "SPEND" + Math.floor(100 + Math.random() * 900);
     setGeneratedCode(code);
     setStep('create-success');
   };
 
   const handleJoin = () => {
-    if (!joinCode) return;
+    if (!joinCode || !joinName) {
+      return setError('Please enter a valid household code and your name.');
+    }
+    setError('');
     if (!otpSent) {
       setOtpSent(true);
       setStep('otp');
@@ -47,6 +60,10 @@ const Auth = ({ onAuthComplete }) => {
   };
 
   const completeAuth = (roleType, name) => {
+    if (step === 'rent' && !rent && roleType === 'Admin') {
+      return setError('Please enter your household rent or mortgage.');
+    }
+    setError('');
     onAuthComplete({
       name: name || 'User',
       family: famName || 'Spendzy Hub',
@@ -60,8 +77,14 @@ const Auth = ({ onAuthComplete }) => {
   return (
     <div className="auth-wrapper" style={{ position: 'absolute', top: 0, left: 0, width: '100vw', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, background: 'var(--bg-base)' }}>
       <GlassCard className="auth-card" style={{ width: '100%', maxWidth: '450px', padding: '3rem 2.5rem' }}>
-        <h1 style={{ textAlign: 'center', fontSize: '2.5rem', marginBottom: '2rem' }}>Spendzy</h1>
+        <h1 style={{ textAlign: 'center', fontSize: '2.5rem', marginBottom: '1.5rem' }}>Spendzy</h1>
         
+        {error && (
+          <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--danger)', padding: '0.8rem', borderRadius: '8px', color: 'var(--danger)', marginBottom: '1.5rem', textAlign: 'center', fontSize: '0.9rem' }}>
+            {error}
+          </div>
+        )}
+
         {step === 'welcome' && (
           <div style={{ textAlign: 'center' }}>
             <h2>Welcome Home</h2>
